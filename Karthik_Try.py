@@ -4,11 +4,19 @@ import turtle
 import time
 
 # Define program constants
-WIDTH = 1000
-HEIGHT = 800
+WIDTH = 800
+HEIGHT = 600
 DELAY = 200
 FOOD_SIZE=32
 SNAKE_SIZE=20
+
+
+try:
+    with open("High Score.txt","r") as file:
+        highScore=int(file.read())
+except FileNotFoundError:
+    highScore=0
+highScoreOld=highScore
 
 offsets={
 "up":(0,SNAKE_SIZE),
@@ -38,7 +46,14 @@ def set_snake_direction(direction):
         if snake_direction!="right":
             snake_direction="left"
 
+def update_highScore():
+    global highScore
+    with open("High Score.txt","w") as file:
+        file.write(str(highScore))
+    pass        
+
 def game_loop():
+    global highScore
     stamper.clearstamps()
     newHead=snake[-1].copy()
     newHead[0]+=offsets[snake_direction][0]
@@ -47,6 +62,8 @@ def game_loop():
     # Check collisions
     if newHead in snake or newHead[0] < -WIDTH/2 or newHead[0] > WIDTH/2 or  newHead[1] < -HEIGHT/2 or newHead[1] > HEIGHT/2:
         time.sleep(2)
+        if highScore>highScoreOld:
+            update_highScore()
         reset()
     else:
 
@@ -61,18 +78,22 @@ def game_loop():
             stamper.goto(segment[0],segment[1])
             stamper.stamp()
         screen.update()
-        screen.title(f"Snake \t Score={score}")
+        screen.title(f"Snake \t Score={score} Highscore={highScore}")
         turtle.ontimer(game_loop,DELAY)
 
 def food_collision():
-    global food_pos, score
+    global food_pos, score, DELAY, highScore
     if get_distance(snake[-1],food_pos) < 20:
+        if DELAY >100:
+            DELAY=int(round(DELAY-0.5,0))
         food_pos=get_random_food_pos()
         for segment in snake:
             if get_distance(snake[-1],food_pos) < 20:
                 food_pos=get_random_food_pos()
         food.goto(food_pos)
         score+=10
+        if score>highScore:
+            highScore=score
         return True
     return False
 
